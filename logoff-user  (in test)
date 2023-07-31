@@ -26,13 +26,28 @@ $querySessionOutput = Invoke-Command -ComputerName $serverName -ScriptBlock { qu
 Write-Host ("Session Information on {0}:" -f $serverName)
 $querySessionOutput -split '\r?\n' | ForEach-Object { Write-Host $_ }
 
-# Prompt the user for a session ID to log off
-$sessionId = Read-Host "Please enter the Session ID you want to log off:"
+# Prompt the user for a list of session IDs to log off (separated by commas)
+$sessionIds = Read-Host "Please enter the Session IDs (comma-separated) you want to log off:"
 
-# Log off the specified user session
-try {
-    Invoke-Command -ComputerName $serverName -ScriptBlock { logoff $using:sessionId } -ErrorAction Stop
-    Write-Host "User session with Session ID $sessionId has been logged off successfully."
-} catch {
-    Write-Host "Error: Unable to log off user session with Session ID $sessionId."
+# Convert the input string into an array of integers (session IDs)
+$sessionIdsArray = $sessionIds -split ',' | ForEach-Object { $_.Trim() }
+
+# Log off the specified user sessions
+foreach ($sessionId in $sessionIdsArray) {
+    try {
+        Invoke-Command -ComputerName $serverName -ScriptBlock { logoff $using:sessionId } -ErrorAction Stop
+        Write-Host "User session with Session ID $sessionId has been logged off successfully."
+    } catch {
+        Write-Host "Error: Unable to log off user session with Session ID $sessionId."
+    }
 }
+
+# Delay for 5 seconds
+Start-Sleep -Seconds 5
+
+# Executing the "query session" command again after the delay
+$querySessionOutputAfterDelay = Invoke-Command -ComputerName $serverName -ScriptBlock { query session }
+
+# Displaying the output of the "query session" command after the delay in vertical list
+Write-Host ("Updated Session Information on {0} after delay:" -f $serverName)
+$querySessionOutputAfterDelay -split '\r?\n' | ForEach-Object { Write-Host $_ }
