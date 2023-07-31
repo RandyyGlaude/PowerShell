@@ -1,57 +1,38 @@
-function Get-LoggedOnUsers {
-    param (
-        [string]$ServerName
-    )
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$serverName
+)
 
-    # Get the active and disconnected user sessions on the specified server
-    $sessions = qwinsta /server:$ServerName | Where-Object { $_ -match '\s\d+\s+Active\s|\s\d+\s+Disconnected\s' }
-
-    $loggedOnUsers = @()
-
-    foreach ($session in $sessions) {
-        $userDetails = $session -split '\s+'
-        $sessionID = $userDetails[1]
-        $state = $userDetails[2]
-        $username = $userDetails[3]
-        $loggedOnUsers += [PSCustomObject]@{
-            "SessionID" = $sessionID
-            "State" = $state
-            "Username" = $username
-        }
+# Function to ask for the server name if not provided as a parameter
+function Get-ServerName {
+    if (-not $serverName) {
+        $serverName = Read-Host "Please enter the server name:"
+        return $serverName
     }
-
-    return $loggedOnUsers
 }
 
-function LogOff-User {
-    param (
-        [string]$ServerName,
-        [int]$SessionID
-    )
+# Prompting the user for the server name if not provided as a parameter
+Get-ServerName
 
-    logoff /server:$ServerName $SessionID
-}
+# Now you can use the $serverName variable as needed in your script
+# For example, you can use it to connect to the server or perform other actions.
 
-# Main script starts here
-$serverName = Read-Host "Enter the server name:"
+Write-Host "You entered Server Name: $serverName"
 
-$loggedOnUsers = Get-LoggedOnUsers -ServerName $serverName
+# Executing the "query session" command on the specified server
+$querySessionOutput = Invoke-Command -ComputerName $serverName -ScriptBlock { query session }
 
-if ($loggedOnUsers.Count -eq 0) {
-    Write-Host "No users are currently logged on or disconnected."
-} else {
-    Write-Host "Logged on and disconnected users on $serverName:"
-    $loggedOnUsers | Format-Table -AutoSize
+# Displaying the output of the "query session" command in vertical list
+Write-Host ("Session Information on {0}:" -f $serverName)
+$querySessionOutput -split '\r?\n' | ForEach-Object { Write-Host $_ }
 
-    $sessionIdToLogoff = Read-Host "Enter the Session ID of the user to log off (type 'exit' to quit):"
+# Prompt the user for a session ID to log off
+$sessionId = Read-Host "Please enter the Session ID you want to log off:"
 
-    if ($sessionIdToLogoff -ne 'exit') {
-        try {
-            $sessionIdToLogoff = [int]$sessionIdToLogoff
-            LogOff-User -ServerName $serverName -SessionID $sessionIdToLogoff
-            Write-Host "User with Session ID $sessionIdToLogoff has been logged off from $serverName."
-        } catch {
-            Write-Host "Invalid Session ID. Please enter a valid Session ID."
-        }
-    }
+# Log off the specified user session
+try {
+    Invoke-Command -ComputerName $serverName -ScriptBlock { logoff $using:sessionId } -ErrorAction Stop
+    Write-Host "User session with Session ID $sessionId has been logged off successfully."
+} catch {
+    Write-Host "Error: Unable to log off user session with Session ID $sessionId."
 }
