@@ -1,0 +1,23 @@
+param (
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$ServerName
+)
+
+# Check if 'hastatus' command exists in the system's PATH
+if (Test-Path (Get-Command hastatus -ErrorAction SilentlyContinue)) {
+    try {
+        # Run "hastatus -sum" command on the provided server
+        $hastatusOutput = & hastatus -sum -server $ServerName
+
+        # Display the output
+        Write-Host "HA Status Summary for server '$ServerName':"
+        Write-Host $hastatusOutput
+    }
+    catch {
+        Write-Host "An error occurred while running the 'hastatus -sum' command. Please make sure the server name is correct."
+    }
+}
+else {
+    Write-Host "'hastatus' command not found. Please ensure it is installed and available in the system's PATH."
+}
