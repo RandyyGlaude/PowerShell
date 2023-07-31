@@ -1,0 +1,21 @@
+param (
+    [Parameter(Mandatory = $true)]
+    [string]$ServerName
+)
+
+function Get-ShadowCopyStorage {
+    $shadowCopies = Get-WmiObject -Namespace "root\cimv2" -Class Win32_ShadowCopy -ComputerName $ServerName
+    if ($shadowCopies) {
+        Write-Host "Shadow Copies found in the storage area on server $ServerName:"
+        $shadowCopies | ForEach-Object {
+            Write-Host "  DeviceObject: $($_.DeviceObject)"
+            Write-Host "  ShadowID: $($_.ShadowID)"
+            Write-Host "  Shadow Copy Set: $($_.ShadowCopySetID)"
+            Write-Host "  ----------------------------"
+        }
+    } else {
+        Write-Host "No Shadow Copies found in the storage area on server $ServerName."
+    }
+}
+
+Get-ShadowCopyStorage
