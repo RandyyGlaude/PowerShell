@@ -1,0 +1,57 @@
+function Get-LoggedOnUsers {
+    param (
+        [string]$ServerName
+    )
+
+    # Get the active and disconnected user sessions on the specified server
+    $sessions = qwinsta /server:$ServerName | Where-Object { $_ -match '\s\d+\s+Active\s|\s\d+\s+Disconnected\s' }
+
+    $loggedOnUsers = @()
+
+    foreach ($session in $sessions) {
+        $userDetails = $session -split '\s+'
+        $sessionID = $userDetails[1]
+        $state = $userDetails[2]
+        $username = $userDetails[3]
+        $loggedOnUsers += [PSCustomObject]@{
+            "SessionID" = $sessionID
+            "State" = $state
+            "Username" = $username
+        }
+    }
+
+    return $loggedOnUsers
+}
+
+function LogOff-User {
+    param (
+        [string]$ServerName,
+        [int]$SessionID
+    )
+
+    logoff /server:$ServerName $SessionID
+}
+
+# Main script starts here
+$serverName = Read-Host "Enter the server name:"
+
+$loggedOnUsers = Get-LoggedOnUsers -ServerName $serverName
+
+if ($loggedOnUsers.Count -eq 0) {
+    Write-Host "No users are currently logged on or disconnected."
+} else {
+    Write-Host "Logged on and disconnected users on $serverName:"
+    $loggedOnUsers | Format-Table -AutoSize
+
+    $sessionIdToLogoff = Read-Host "Enter the Session ID of the user to log off (type 'exit' to quit):"
+
+    if ($sessionIdToLogoff -ne 'exit') {
+        try {
+            $sessionIdToLogoff = [int]$sessionIdToLogoff
+            LogOff-User -ServerName $serverName -SessionID $sessionIdToLogoff
+            Write-Host "User with Session ID $sessionIdToLogoff has been logged off from $serverName."
+        } catch {
+            Write-Host "Invalid Session ID. Please enter a valid Session ID."
+        }
+    }
+}
