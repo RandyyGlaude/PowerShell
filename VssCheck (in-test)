@@ -1,21 +1,38 @@
 param (
-    [Parameter(Mandatory = $true)]
-    [string]$ServerName
+    [Parameter(Mandatory = $true, Position = 0)]
+    [Alias("etsn")]
+    [string]$Server
 )
 
-function Get-ShadowCopyStorage {
-    $shadowCopies = Get-WmiObject -Namespace "root\cimv2" -Class Win32_ShadowCopy -ComputerName $ServerName
-    if ($shadowCopies) {
-        Write-Host "Shadow Copies found in the storage area on server $ServerName:"
-        $shadowCopies | ForEach-Object {
-            Write-Host "  DeviceObject: $($_.DeviceObject)"
-            Write-Host "  ShadowID: $($_.ShadowID)"
-            Write-Host "  Shadow Copy Set: $($_.ShadowCopySetID)"
-            Write-Host "  ----------------------------"
+function Get-ShadowCopies {
+    if (Test-Connection -ComputerName $Server -Quiet) {
+        $shadowCopies = Invoke-Command -ComputerName $Server -ScriptBlock {
+            $shadowCopies = Get-WmiObject Win32_ShadowCopy
+            $volumes = Get-WmiObject Win32_Volume
+            $shadowCopyInfo = @()
+
+            foreach ($shadowCopy in $shadowCopies) {
+                $volume = $volumes | Where-Object { $_.DeviceID -eq $shadowCopy.VolumeName }
+                if ($volume) {
+                    $shadowCopySizeGB = [math]::Round(($shadowCopy.InstallationSize / 1GB), 1)
+                    $shadowCopyInfo += "Disk $($volume.Name.Substring(0,1)): used $shadowCopySizeGB GB"
+                }
+            }
+
+            $shadowCopyInfo
+        }
+
+        if ($shadowCopies) {
+            Write-Host "Shadow Copy Locations and Sizes:"
+            $shadowCopies | ForEach-Object {
+                Write-Host $_ -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "No shadow copies found on $Server" -ForegroundColor Red
         }
     } else {
-        Write-Host "No Shadow Copies found in the storage area on server $ServerName."
+        Write-Host "Unable to connect to the server: $Server" -ForegroundColor Red
     }
 }
 
-Get-ShadowCopyStorage
+Get-ShadowCopies
