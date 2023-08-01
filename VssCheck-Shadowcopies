@@ -1,0 +1,47 @@
+param (
+    [Parameter(Mandatory = $true, Position = 0)]
+    [Alias("etsn")]
+    [string]$Server
+)
+
+function Get-ShadowCopies {
+    if (Test-Connection -ComputerName $Server -Quiet) {
+        $vssadminOutput = Invoke-Command -ComputerName $Server -ScriptBlock { vssadmin list shadowstorage }
+
+        $shadowCopyInfoList = @()
+        $currentShadowCopy = $null
+
+        foreach ($line in $vssadminOutput) {
+            if ($line -match 'For volume: (.*)') {
+                $currentShadowCopy = @{
+                    Volume = $matches[1]
+                    UsedSpace = $null
+                    AllocatedSpace = $null
+                }
+            } elseif ($line -match 'Used Shadow Copy Storage space: (.*)') {
+                $currentShadowCopy.UsedSpace = $matches[1].Trim()
+            } elseif ($line -match 'Allocated Shadow Copy Storage space: (.*)') {
+                $currentShadowCopy.AllocatedSpace = $matches[1].Trim()
+                $shadowCopyInfoList += $currentShadowCopy
+            }
+        }
+
+        if ($shadowCopyInfoList) {
+            Write-Host "Shadow Copy Storage association:"
+            foreach ($info in $shadowCopyInfoList) {
+                Write-Host "   For volume: $($info.Volume)"
+                Write-Host "   Shadow Copy Storage volume: $($info.Volume)"
+                Write-Host "   Used Shadow Copy Storage space: $($info.UsedSpace)"
+                Write-Host "   Allocated Shadow Copy Storage space: $($info.AllocatedSpace)"
+                Write-Host "   Maximum Shadow Copy Storage space: UNBOUNDED"
+                Write-Host ""
+            }
+        } else {
+            Write-Host "No shadow copies found on $Server" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Unable to connect to the server: $Server" -ForegroundColor Red
+    }
+}
+
+Get-ShadowCopies
