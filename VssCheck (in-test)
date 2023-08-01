@@ -14,8 +14,14 @@ function Get-ShadowCopies {
             foreach ($shadowCopy in $shadowCopies) {
                 $volume = $volumes | Where-Object { $_.DeviceID -eq $shadowCopy.VolumeName }
                 if ($volume) {
+                    $volumeDrive = $volume.Name.Substring(0, 1)
                     $shadowCopySizeGB = [math]::Round(($shadowCopy.InstallationSize / 1GB), 1)
-                    $shadowCopyInfo += "Disk $($volume.Name.Substring(0,1)): used $shadowCopySizeGB GB"
+                    $volumeMaxSizeGB = [math]::Round(($volume.Capacity / 1GB), 1)
+                    $shadowCopyInfo += [PSCustomObject]@{
+                        VolumeDrive = $volumeDrive
+                        Used = "$shadowCopySizeGB GB"
+                        MaximumSize = "$volumeMaxSizeGB GB"
+                    }
                 }
             }
 
@@ -25,7 +31,7 @@ function Get-ShadowCopies {
         if ($shadowCopies) {
             Write-Host "Shadow Copy Locations and Sizes:"
             $shadowCopies | ForEach-Object {
-                Write-Host $_ -ForegroundColor Yellow
+                Write-Host "Volume $($_.VolumeDrive) - Used $($_.Used) - Maximum Size $($_.MaximumSize)" -ForegroundColor Yellow
             }
         } else {
             Write-Host "No shadow copies found on $Server" -ForegroundColor Red
