@@ -1,0 +1,24 @@
+# Prompt user for server name
+$serverName = Read-Host "Enter the server name"
+
+# Check if server name is provided
+if ($serverName -eq "") {
+    Write-Host "Server name is mandatory. Please provide a valid server name."
+} else {
+    try {
+        # Attempt to establish a connection to the server
+        Test-Connection -ComputerName $serverName -Count 1 -ErrorAction Stop
+        Write-Host "Connection to $serverName successful."
+
+        # Run the 'hastatus -sum' command on the Veritas cluster server
+        $clusterStatus = Invoke-Command -ComputerName $serverName -ScriptBlock {
+            & "hastatus.exe" -sum
+        }
+
+        $clusterStatus -split '\r?\n' | ForEach-Object {
+            Write-Host $_
+        }
+    } catch {
+        Write-Host "Connection to $serverName failed. Error: $($_.Exception.Message)"
+    }
+}
