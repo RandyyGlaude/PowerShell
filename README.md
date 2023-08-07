@@ -36,3 +36,8 @@ If there are none, you will get a message.
     India Standard Time: "India Standard Time"
     China Standard Time: "China Standard Time"
     Australia/Sydney: "AUS Eastern Standard Time"
+
+
+   # Get-ClusterStatus
+
+   Made to check Veritas clusters
