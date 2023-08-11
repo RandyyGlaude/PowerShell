@@ -1,5 +1,6 @@
+**Scripts are working but still under development. They will be updated ones in a while for the better.**
+
 # PowerShell
-Powershell scrips to make life easier.
 
 The scripts are running in PowerShell ISE.
 
