@@ -1,0 +1,21 @@
+# Prompt for server name
+$serverName = Read-Host "Enter the server name"
+
+# Check if shadow copies exist on the server
+$shadowCopies = Get-WmiObject -ComputerName $serverName -Class Win32_ShadowCopy
+
+if ($shadowCopies.Count -gt 0) {
+    Write-Host "Shadow copies found on $serverName:"
+    foreach ($shadowCopy in $shadowCopies) {
+        $volume = $shadowCopy.VolumeName
+        $share = $shadowCopy.Caption
+        $usedSpaceGB = [math]::Round($shadowCopy.UsedSpace / 1GB, 2)
+        
+        Write-Host "Volume: $volume"
+        Write-Host "Share: $share"
+        Write-Host "Used Space: $usedSpaceGB GB"
+        Write-Host "------------------------------------"
+    }
+} else {
+    Write-Host "No shadow copies found on $serverName"
+}
