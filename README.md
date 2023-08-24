@@ -1,50 +1,55 @@
-**Scripts are working but still under development. They will be updated ones in a while for the better.**
+# PowerShell Scripts Collection
 
-# PowerShell
+Welcome to the PowerShell Scripts Collection! This repository houses an array of invaluable PowerShell scripts meticulously crafted to streamline server management, system monitoring, and a range of tasks. Each script is meticulously designed with a specific purpose in mind, empowering you to execute actions efficiently and effectively.
 
-The scripts are running in PowerShell ISE.
+## Scripts at a Glance
 
-# Get-MonitorCPULoad:
-This script gives you the highest Cpu usage + service name with Path.
+Here's a concise overview of the exceptional scripts you'll find within this collection:
 
-# Get-user-loggedoff
+### Get-StatusChecker
 
-When entering the server name teh script with use querySessions and prompt you to enter the SessionID you would like to signout.
-To add moore SessionIDs add a Comma between numbers.
+Effortlessly inspect and oversee the status of designated services on a server. This script empowers you to input the server name and service names, providing comprehensive insights into service statuses. It even offers the option to initiate the startup of stopped services.
 
-# VssCheck-Shadowcopies
+### VssCheck-Shadowcopies
 
-just enter the servername and it will give an output with all the info regarding shadowcopies.
-If there are none, you will get a message.
+Unearth insightful details regarding shadow copies on a server. This script facilitates an understanding of shadow storage allocation, utilized space, and volume associations.
 
- # Get-TimeZone -ListAvailable
- 
-    Greenwich Mean Time (GMT): "GMT Standard Time"
-    British Summer Time (BST): "GMT Daylight Time"
-    Central European Time (CET): "W. Europe Standard Time"
-    Central European Summer Time (CEST): "W. Europe Daylight Time"
-    Eastern European Time (EET): "E. Europe Standard Time"
-    Eastern European Summer Time (EEST): "E. Europe Daylight Time"
-    Western European Time (WET): "GMT Standard Time"
-    Western European Summer Time (WEST): "GMT Daylight Time"
-    Eastern Standard Time (US & Canada): "Eastern Standard Time"
-    Central Standard Time (US & Canada): "Central Standard Time"
-    Mountain Standard Time (US & Canada): "Mountain Standard Time"
-    Pacific Standard Time (US & Canada): "Pacific Standard Time"
-    UTC (Coordinated Universal Time): "UTC"
-    GMT (Greenwich Mean Time): "GMT Standard Time"
-    Brazil/Sao Paulo: "E. South America Standard Time"
-    India Standard Time: "India Standard Time"
-    China Standard Time: "China Standard Time"
-    Australia/Sydney: "AUS Eastern Standard Time"
+### Get-ClusterStatus
 
+Obtain real-time updates on the status of a Windows cluster server. By entering the server name, this script provides a swift overview of the cluster's operational state.
 
-   # Get-ClusterStatus
+### Get-MonitorCPULoad
 
-   Made to check Veritas clusters
+Monitor CPU load and swiftly identify the service exerting the highest CPU consumption on a server. This script delivers immediate information about CPU usage and the service that is the primary cause of elevated loads.
 
+### Get-Uptime-LastReboot
 
-  # Get-StatusChecker
+Retrieve essential uptime and last reboot details for specified client machines. By inputting client names, this script offers valuable insights into their uptime and the timing of their last system reboot.
 
-   Enter the server name and services you need to check, if service is stopped, script will ask to start is with a yes/no. If yes you get a output.
-   the script will do this one by one if you enter more sservices
+### Get-user-loggedoff
+
+Efficiently manage active user sessions on a remote server. Input the server name and session IDs to facilitate smooth session management.
+
+### Get-ChangeTimeZone
+
+Effortlessly alter time zones on designated servers. This script simplifies the process by allowing you to input server names and select desired time zones, simplifying time zone management across multiple servers.
+
+## List of Time Zones
+
+For your convenience, here's a list of commonly used time zones:
+
+- Pacific Time (PT)
+- Mountain Time (MT)
+- Central Time (CT)
+- Eastern Time (ET)
+- Alaska Time (AKT)
+- Hawaii-Aleutian Time (HST)
+- Greenwich Mean Time (GMT)
+- Coordinated Universal Time (UTC)
+- Central European Time (CET)
+- Eastern European Time (EET)
+- Australian Eastern Standard Time (AEST)
+- Japan Standard Time (JST)
+- Indian Standard Time (IST)
+- China Standard Time (CST)
+- Pacific Standard Time (PST)
