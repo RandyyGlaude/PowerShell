@@ -6,6 +6,20 @@ Welcome to the PowerShell Scripts Collection! This repository is your go-to hub 
 
 Here's a quick overview of the scripts available in this collection:
 
+### Get-System-Health-Report
+
+Generate a detailed health report for a server. Obtain insights into CPU, memory, pagefile usage, and more.
+
+Display:
+
+  - Pingable status
+  - CPU, memory, pagefile usage
+  - Local time and last reboot time
+  - Server uptime in days, hours, minutes
+  - Event logs from the last 24 hours
+  - Disk space details
+  - Network adapter info
+  - Installed software list
 ### Get-StatusChecker
 
 Check and manage the status of specific services on a server. Input the server name and service names to see their statuses. You can even start services that are stopped.
@@ -53,3 +67,5 @@ Here's a list of commonly used time zones for your convenience:
 - Indian Standard Time (IST)
 - China Standard Time (CST)
 - Pacific Standard Time (PST)
+
+
