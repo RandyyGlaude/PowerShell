@@ -42,3 +42,9 @@ If there are none, you will get a message.
    # Get-ClusterStatus
 
    Made to check Veritas clusters
+
+
+  # Get-StatusChecker
+
+   Enter the server name and services you need to check, if service is stopped, script will ask to start is with a yes/no. If yes you get a output.
+   the script will do this one by one if you enter more sservices
