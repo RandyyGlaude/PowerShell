@@ -1,0 +1,47 @@
+# Prompt user for server name
+$serverName = Read-Host "Enter the name of the server"
+
+# Prompt user for service names (comma-separated)
+$serviceNames = Read-Host "Enter the names of the services (comma-separated)"
+
+# Convert the comma-separated service names into an array
+$serviceNamesArray = $serviceNames -split ',' | ForEach-Object { $_.Trim() }
+
+# Loop through each service name
+foreach ($serviceName in $serviceNamesArray) {
+    # Get the service status on the specified server
+    $service = Get-Service -Name $serviceName -ComputerName $serverName
+
+    # Check if the service exists
+    if ($service -eq $null) {
+        Write-Host "Service $serviceName not found on server $serverName."
+    } else {
+        Write-Host "Current Service Status for $($serviceName):"
+        $service | Format-Table -AutoSize
+
+        # Check if the service is stopped
+        if ($service.Status -eq "Stopped") {
+            $startService = Read-Host "Service $serviceName is stopped. Do you want to start it? (yes/no)"
+            if ($startService -eq "yes") {
+                # Use Invoke-Command to start the service on the remote server
+                Invoke-Command -ComputerName $serverName -ScriptBlock { 
+                    param ($serviceName)
+                    Start-Service -Name $serviceName
+                } -ArgumentList $serviceName
+                Write-Host "Service $serviceName started."
+
+                # Get the updated service status after starting it
+                $service = Get-Service -Name $serviceName -ComputerName $serverName
+                Write-Host "Updated Service Status for $($serviceName):"
+                $service | Format-Table -AutoSize
+            } else {
+                Write-Host "Service $serviceName was not started."
+            }
+        } else {
+            Write-Host "Service $serviceName is already running."
+        }
+    }
+
+    # Add a separator between services
+    Write-Host ("-" * 40)
+}
