@@ -1,0 +1,89 @@
+$serverName = Read-Host "Enter the server name"
+
+function Get-Performance {
+    $cpuUsage = (Get-WmiObject Win32_Processor -ComputerName $serverName | Measure-Object -Property LoadPercentage -Average).Average
+    $memory = Get-WmiObject Win32_OperatingSystem -ComputerName $serverName
+    $memoryUsage = ($memory.TotalVisibleMemorySize - $memory.FreePhysicalMemory) / $memory.TotalVisibleMemorySize * 100
+    $pagefile = Get-WmiObject Win32_PageFileUsage -ComputerName $serverName -ErrorAction SilentlyContinue
+    $pagefileUsage = if ($pagefile -and $pagefile.PeakUsage -gt 0) { ($pagefile.CurrentUsage / $pagefile.PeakUsage) * 100 } else { 0 }
+    
+    return @{
+        CPU = $cpuUsage
+        Memory = $memoryUsage
+        Pagefile = $pagefileUsage
+    }
+}
+
+function Get-EventLogs {
+    $startTime = (Get-Date).AddHours(-24)
+    $logs = Get-WinEvent -LogName System -ComputerName $serverName -MaxEvents 50 | Where-Object {$_.TimeCreated -ge $startTime}
+    return $logs
+}
+
+function Get-DiskSpace {
+    $disks = Get-WmiObject Win32_LogicalDisk -ComputerName $serverName | Where-Object {$_.DriveType -eq 3 -and $_.Size -gt 0}
+    $diskSpaceInfo = @()
+    
+    foreach ($disk in $disks) {
+        $diskInfo = @{
+            DeviceID = $disk.DeviceID
+            MediaType = $disk.MediaType
+            Size = $disk.Size
+            FreeSpace = $disk.FreeSpace
+            FreeSpacePercentage = [math]::Round(($disk.FreeSpace / $disk.Size * 100), 2)
+        }
+        $diskSpaceInfo += New-Object PSObject -Property $diskInfo
+    }
+    
+    return $diskSpaceInfo
+}
+
+function Get-NetworkAdapters {
+    $adapters = Get-WmiObject Win32_NetworkAdapter -ComputerName $serverName | Where-Object {$_.NetConnectionStatus -eq 2}
+    $networkAdaptersInfo = @()
+    
+    foreach ($adapter in $adapters) {
+        $adapterInfo = @{
+            NetConnectionID = $adapter.NetConnectionID
+            Speed = [math]::Round(($adapter.Speed / 1GB), 2)
+            AdapterType = $adapter.AdapterType
+        }
+        $networkAdaptersInfo += New-Object PSObject -Property $adapterInfo
+    }
+    
+    return $networkAdaptersInfo
+}
+
+function Get-InstalledSoftware {
+    $software = Get-WmiObject Win32_Product -ComputerName $serverName
+    return $software | Select-Object Name, Version
+}
+
+$performance = Get-Performance
+$eventLogs = Get-EventLogs
+$diskSpace = Get-DiskSpace
+$networkAdapters = Get-NetworkAdapters
+$installedSoftware = Get-InstalledSoftware
+
+$pingable = (Test-Connection -ComputerName $serverName -Count 1 -ErrorAction SilentlyContinue) -ne $null
+$lastReboot = (Get-CimInstance Win32_OperatingSystem -ComputerName $serverName).LastBootUpTime
+$uptime = (Get-Date) - $lastReboot
+
+$localTime = Get-Date -Format "MM/dd/yyyy hh:mm:ss tt"
+
+Write-Host "System Health Report for $serverName"
+Write-Host "Pingable: $pingable"
+Write-Host "Average CPU Usage: $($performance.CPU.ToString('N0'))%"
+Write-Host "Memory Usage: $($performance.Memory.ToString('N0'))%"
+Write-Host "Pagefile Usage: $($performance.Pagefile.ToString('N0'))%"
+Write-Host "Local Server Time: $localTime"
+Write-Host "Last Reboot Time: $lastReboot"
+Write-Host "Server Uptime: $($uptime.Days) days $($uptime.Hours) hours $($uptime.Minutes) minutes"
+Write-Host "All Event Logs in the Last 24 Hours:"
+$eventLogs | Format-Table -AutoSize TimeCreated, Id, LevelDisplayName, Message
+Write-Host "Disk Space:"
+$diskSpace | Format-Table -AutoSize DeviceID, MediaType, Size, FreeSpace, FreeSpacePercentage
+Write-Host "Network Adapters:"
+$networkAdapters | Format-Table -AutoSize NetConnectionID, Speed, AdapterType
+Write-Host "Installed Software:"
+$installedSoftware | Format-Table -AutoSize Name, Version
